@@ -1,5 +1,7 @@
 # Ressoa — API principal (Java)
 
+[![CI](https://github.com/olavoneves/ressoa-api-java/actions/workflows/ci.yml/badge.svg)](https://github.com/olavoneves/ressoa-api-java/actions/workflows/ci.yml)
+
 > **Matar a larva com som antes que a seca vire epidemia.**
 > Global Solution FIAP 2026/2 — CitizenTech · Disciplina **Java Advanced**
 
