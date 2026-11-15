@@ -1,0 +1,1606 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Ressoa — API principal",
+        "description": "Matar a larva com som antes que a seca vire epidemia.\n\nAPI do núcleo do Ressoa: contas (CIDADAO e GESTOR), bairros, aparelhos de ultrassom,\navaliações de risco de dengue, orientação gerada por IA e alertas aos moradores.\nFaça login em `POST /api/auth/login`, copie o `token` e clique em **Authorize**.",
+        "contact": {
+            "name": "Equipe Ressoa — FIAP 2TDS",
+            "url": "https://github.com/olavoneves/ressoa-api-java"
+        },
+        "version": "v1"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8080",
+            "description": "Generated server url"
+        }
+    ],
+    "tags": [
+        {
+            "name": "Bairros",
+            "description": "Territórios monitorados. Leitura pública (cadastro do morador); escrita só GESTOR"
+        },
+        {
+            "name": "Autenticação",
+            "description": "Cadastro, login e perfil (JWT)"
+        },
+        {
+            "name": "Orientação por IA",
+            "description": "Spring AI + Gemini: orientação ao morador ou plano de ação ao gestor"
+        },
+        {
+            "name": "Notificações",
+            "description": "Alertas ao morador quando o risco do bairro sobe"
+        },
+        {
+            "name": "Aparelhos",
+            "description": "Aparelhos Ressoa. CIDADAO gerencia os seus; GESTOR gerencia todos"
+        },
+        {
+            "name": "Avaliações de risco",
+            "description": "Nível de risco por bairro e semana (serviço de IA e GESTOR)"
+        }
+    ],
+    "paths": {
+        "/api/dispositivos/{id}": {
+            "get": {
+                "tags": [
+                    "Aparelhos"
+                ],
+                "summary": "Detalha um aparelho",
+                "operationId": "buscar",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DispositivoResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Aparelhos"
+                ],
+                "summary": "Atualiza aparelho",
+                "operationId": "atualizar",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DispositivoAtualizarRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DispositivoResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Aparelhos"
+                ],
+                "summary": "Remove aparelho",
+                "operationId": "excluir",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/bairros/{id}": {
+            "get": {
+                "tags": [
+                    "Bairros"
+                ],
+                "summary": "Detalha um bairro com o nível de risco atual",
+                "operationId": "buscar_1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BairroResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Bairros"
+                ],
+                "summary": "Atualiza bairro (GESTOR)",
+                "operationId": "atualizar_1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BairroRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BairroResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Bairros"
+                ],
+                "summary": "Exclui bairro sem vínculos (GESTOR)",
+                "operationId": "excluir_1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/dispositivos": {
+            "get": {
+                "tags": [
+                    "Aparelhos"
+                ],
+                "summary": "Lista aparelhos paginados (os seus, ou todos para GESTOR)",
+                "operationId": "listar",
+                "parameters": [
+                    {
+                        "name": "bairroId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "ATIVO",
+                                "SEM_SINAL",
+                                "BATERIA_BAIXA",
+                                "INATIVO"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Zero-based page index (0..N)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "minimum": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "The size of the page to be returned",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 20,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "default": [
+                                "instaladoEm,DESC"
+                            ],
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PageResponseDispositivoResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Aparelhos"
+                ],
+                "summary": "Cadastra aparelho",
+                "operationId": "criar",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DispositivoCriarRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DispositivoResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/bairros": {
+            "get": {
+                "tags": [
+                    "Bairros"
+                ],
+                "summary": "Lista bairros paginados, com filtros opcionais",
+                "operationId": "listar_1",
+                "parameters": [
+                    {
+                        "name": "nome",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "municipio",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "uf",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "nivel",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "VERDE",
+                                "AMARELO",
+                                "LARANJA",
+                                "VERMELHO"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Zero-based page index (0..N)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "minimum": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "The size of the page to be returned",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 20,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "default": [
+                                "nome,ASC"
+                            ],
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PageResponseBairroResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Bairros"
+                ],
+                "summary": "Cadastra bairro (GESTOR)",
+                "operationId": "criar_1",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BairroRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BairroResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/bairros/{id}/orientacao": {
+            "post": {
+                "tags": [
+                    "Orientação por IA"
+                ],
+                "summary": "Gera orientação para o bairro conforme o papel do usuário (CIDADAO → morador; GESTOR → plano de ação)",
+                "operationId": "gerar",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OrientacaoResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avaliacoes": {
+            "get": {
+                "tags": [
+                    "Avaliações de risco"
+                ],
+                "summary": "Histórico paginado de avaliações (filtros bairroId e nivel)",
+                "operationId": "listar_2",
+                "parameters": [
+                    {
+                        "name": "bairroId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "nivel",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "VERDE",
+                                "AMARELO",
+                                "LARANJA",
+                                "VERMELHO"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Zero-based page index (0..N)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "minimum": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "The size of the page to be returned",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 20,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "default": [
+                                "criadaEm,DESC"
+                            ],
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PageResponseAvaliacaoResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Avaliações de risco"
+                ],
+                "summary": "Registra avaliação (GESTOR / serviço de IA). Se o nível mudar, publica risco.atualizado",
+                "operationId": "registrar",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AvaliacaoRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AvaliacaoResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/registro": {
+            "post": {
+                "tags": [
+                    "Autenticação"
+                ],
+                "summary": "Cadastra um morador (papel CIDADAO) e já devolve o token",
+                "operationId": "registrar_1",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RegistroRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TokenResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/login": {
+            "post": {
+                "tags": [
+                    "Autenticação"
+                ],
+                "summary": "Autentica e devolve { token, papel }",
+                "operationId": "login",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TokenResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/notificacoes/{id}/lida": {
+            "patch": {
+                "tags": [
+                    "Notificações"
+                ],
+                "summary": "Marca um alerta como lido",
+                "operationId": "marcarComoLida",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NotificacaoResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/notificacoes": {
+            "get": {
+                "tags": [
+                    "Notificações"
+                ],
+                "summary": "Lista os alertas do usuário (filtro opcional lida=true|false)",
+                "operationId": "listar_3",
+                "parameters": [
+                    {
+                        "name": "lida",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Zero-based page index (0..N)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 0,
+                            "minimum": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "The size of the page to be returned",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 20,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "default": [
+                                "criadaEm,DESC"
+                            ],
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PageResponseNotificacaoResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/notificacoes/nao-lidas/contagem": {
+            "get": {
+                "tags": [
+                    "Notificações"
+                ],
+                "summary": "Quantidade de alertas não lidos (badge do app)",
+                "operationId": "contarNaoLidas",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "integer",
+                                        "format": "int64"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/avaliacoes/{id}": {
+            "get": {
+                "tags": [
+                    "Avaliações de risco"
+                ],
+                "summary": "Detalha uma avaliação",
+                "operationId": "buscar_2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AvaliacaoResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/me": {
+            "get": {
+                "tags": [
+                    "Autenticação"
+                ],
+                "summary": "Perfil do usuário autenticado",
+                "operationId": "me",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UsuarioResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "DispositivoAtualizarRequest": {
+                "type": "object",
+                "properties": {
+                    "tipoRecipiente": {
+                        "type": "string",
+                        "enum": [
+                            "BALDE",
+                            "TAMBOR",
+                            "CAIXA_DAGUA"
+                        ],
+                        "example": "CAIXA_DAGUA"
+                    },
+                    "volumeLitros": {
+                        "type": "integer",
+                        "format": "int32",
+                        "example": 500,
+                        "maximum": 20000,
+                        "minimum": 1
+                    },
+                    "pulsosPorDia": {
+                        "type": "integer",
+                        "format": "int32",
+                        "example": 2,
+                        "maximum": 24,
+                        "minimum": 1
+                    },
+                    "bairroId": {
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 1,
+                        "exclusiveMinimum": 0
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Opcional: ATIVO ou INATIVO (os demais são definidos pela telemetria)",
+                        "enum": [
+                            "ATIVO",
+                            "SEM_SINAL",
+                            "BATERIA_BAIXA",
+                            "INATIVO"
+                        ],
+                        "example": "ATIVO"
+                    }
+                },
+                "required": [
+                    "bairroId",
+                    "pulsosPorDia",
+                    "tipoRecipiente",
+                    "volumeLitros"
+                ]
+            },
+            "DispositivoResponse": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "numeroSerie": {
+                        "type": "string"
+                    },
+                    "tipoRecipiente": {
+                        "type": "string",
+                        "enum": [
+                            "BALDE",
+                            "TAMBOR",
+                            "CAIXA_DAGUA"
+                        ]
+                    },
+                    "volumeLitros": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "pulsosPorDia": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "ATIVO",
+                            "SEM_SINAL",
+                            "BATERIA_BAIXA",
+                            "INATIVO"
+                        ]
+                    },
+                    "instaladoEm": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "usuarioId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "usuarioNome": {
+                        "type": "string"
+                    },
+                    "bairroId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "bairroNome": {
+                        "type": "string"
+                    }
+                }
+            },
+            "BairroRequest": {
+                "type": "object",
+                "description": "Dados de um bairro. O nível de risco não é editável aqui: muda pelas avaliações de risco.",
+                "properties": {
+                    "nome": {
+                        "type": "string",
+                        "example": "Jardim Ângela",
+                        "maxLength": 120,
+                        "minLength": 0
+                    },
+                    "municipio": {
+                        "type": "string",
+                        "example": "São Paulo",
+                        "maxLength": 120,
+                        "minLength": 0
+                    },
+                    "uf": {
+                        "type": "string",
+                        "example": "SP",
+                        "minLength": 1,
+                        "pattern": "^[A-Za-z]{2}$"
+                    },
+                    "codigoIbge": {
+                        "type": "string",
+                        "example": "3550308",
+                        "minLength": 1,
+                        "pattern": "^\\d{7}$"
+                    },
+                    "aguaIntermitente": {
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "required": [
+                    "aguaIntermitente",
+                    "codigoIbge",
+                    "municipio",
+                    "nome",
+                    "uf"
+                ]
+            },
+            "BairroResponse": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "nome": {
+                        "type": "string"
+                    },
+                    "municipio": {
+                        "type": "string"
+                    },
+                    "uf": {
+                        "type": "string"
+                    },
+                    "codigoIbge": {
+                        "type": "string"
+                    },
+                    "aguaIntermitente": {
+                        "type": "boolean"
+                    },
+                    "nivelRisco": {
+                        "type": "string",
+                        "enum": [
+                            "VERDE",
+                            "AMARELO",
+                            "LARANJA",
+                            "VERMELHO"
+                        ]
+                    },
+                    "acaoRecomendada": {
+                        "type": "string"
+                    }
+                }
+            },
+            "DispositivoCriarRequest": {
+                "type": "object",
+                "description": "Cadastro de aparelho. Para CIDADAO o dono é sempre o próprio usuário e o bairro padrão é o dele.",
+                "properties": {
+                    "numeroSerie": {
+                        "type": "string",
+                        "example": "RSA-2026-0001",
+                        "minLength": 1,
+                        "pattern": "^[A-Za-z0-9-]{4,40}$"
+                    },
+                    "tipoRecipiente": {
+                        "type": "string",
+                        "enum": [
+                            "BALDE",
+                            "TAMBOR",
+                            "CAIXA_DAGUA"
+                        ],
+                        "example": "TAMBOR"
+                    },
+                    "volumeLitros": {
+                        "type": "integer",
+                        "format": "int32",
+                        "example": 200,
+                        "maximum": 20000,
+                        "minimum": 1
+                    },
+                    "pulsosPorDia": {
+                        "type": "integer",
+                        "format": "int32",
+                        "example": 1,
+                        "maximum": 24,
+                        "minimum": 1
+                    },
+                    "bairroId": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Opcional para CIDADAO (usa o bairro do cadastro)",
+                        "example": 1,
+                        "exclusiveMinimum": 0
+                    },
+                    "usuarioId": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Somente GESTOR: dono do aparelho",
+                        "example": 2,
+                        "exclusiveMinimum": 0
+                    }
+                },
+                "required": [
+                    "numeroSerie",
+                    "tipoRecipiente",
+                    "volumeLitros"
+                ]
+            },
+            "OrientacaoResponse": {
+                "type": "object",
+                "properties": {
+                    "bairroId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "bairroNome": {
+                        "type": "string"
+                    },
+                    "nivel": {
+                        "type": "string",
+                        "enum": [
+                            "VERDE",
+                            "AMARELO",
+                            "LARANJA",
+                            "VERMELHO"
+                        ]
+                    },
+                    "publico": {
+                        "type": "string",
+                        "description": "MORADOR (orientação simples) ou GESTOR (plano de ação)",
+                        "enum": [
+                            "MORADOR",
+                            "GESTOR"
+                        ]
+                    },
+                    "texto": {
+                        "type": "string"
+                    },
+                    "geradaPorIa": {
+                        "type": "boolean",
+                        "description": "false quando a IA estava indisponível e foi usado o protocolo padrão"
+                    },
+                    "geradaEm": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "AvaliacaoRequest": {
+                "type": "object",
+                "description": "Avaliação de risco de um bairro. Se o nível não for informado, a API o calcula pelos gatilhos\ndo Ressoa (incidência > 100/100 mil = VERMELHO; Rt > 1 = LARANJA; temp. mínima > 22 °C = AMARELO).",
+                "properties": {
+                    "bairroId": {
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 1,
+                        "exclusiveMinimum": 0
+                    },
+                    "semanaEpidemiologica": {
+                        "type": "integer",
+                        "format": "int32",
+                        "description": "Semana epidemiológica no formato AAAASS",
+                        "example": 202647,
+                        "maximum": 209953,
+                        "minimum": 200001
+                    },
+                    "nivel": {
+                        "type": "string",
+                        "description": "Opcional: se ausente, é calculado pelos indicadores",
+                        "enum": [
+                            "VERDE",
+                            "AMARELO",
+                            "LARANJA",
+                            "VERMELHO"
+                        ],
+                        "example": "LARANJA"
+                    },
+                    "tempMinMedia": {
+                        "type": "number",
+                        "example": 23.4,
+                        "maximum": 45.0,
+                        "minimum": -10.0
+                    },
+                    "casos100k": {
+                        "type": "number",
+                        "example": 48.5,
+                        "minimum": 0.0
+                    },
+                    "rt": {
+                        "type": "number",
+                        "example": 1.12,
+                        "maximum": 20.0,
+                        "minimum": 0.0
+                    }
+                },
+                "required": [
+                    "bairroId",
+                    "semanaEpidemiologica"
+                ]
+            },
+            "AvaliacaoResponse": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "bairroId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "bairroNome": {
+                        "type": "string"
+                    },
+                    "semanaEpidemiologica": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "nivel": {
+                        "type": "string",
+                        "enum": [
+                            "VERDE",
+                            "AMARELO",
+                            "LARANJA",
+                            "VERMELHO"
+                        ]
+                    },
+                    "acaoRecomendada": {
+                        "type": "string"
+                    },
+                    "tempMinMedia": {
+                        "type": "number"
+                    },
+                    "casos100k": {
+                        "type": "number"
+                    },
+                    "rt": {
+                        "type": "number"
+                    },
+                    "orientacaoIa": {
+                        "type": "string"
+                    },
+                    "criadaEm": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "RegistroRequest": {
+                "type": "object",
+                "description": "Cadastro de morador (papel CIDADAO)",
+                "properties": {
+                    "nome": {
+                        "type": "string",
+                        "example": "Maria da Silva",
+                        "maxLength": 120,
+                        "minLength": 3
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "maria@email.com",
+                        "maxLength": 160,
+                        "minLength": 0
+                    },
+                    "senha": {
+                        "type": "string",
+                        "example": "Senha@123",
+                        "maxLength": 72,
+                        "minLength": 8,
+                        "pattern": "^(?=.*[A-Za-z])(?=.*\\d).+$"
+                    },
+                    "bairroId": {
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 1,
+                        "exclusiveMinimum": 0
+                    }
+                },
+                "required": [
+                    "bairroId",
+                    "email",
+                    "nome",
+                    "senha"
+                ]
+            },
+            "TokenResponse": {
+                "type": "object",
+                "description": "Token de acesso. Envie no header Authorization: Bearer {token}",
+                "properties": {
+                    "token": {
+                        "type": "string"
+                    },
+                    "tipo": {
+                        "type": "string"
+                    },
+                    "expiraEm": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "papel": {
+                        "type": "string",
+                        "enum": [
+                            "CIDADAO",
+                            "GESTOR"
+                        ]
+                    },
+                    "usuario": {
+                        "$ref": "#/components/schemas/UsuarioResponse"
+                    }
+                }
+            },
+            "UsuarioResponse": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "nome": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "papel": {
+                        "type": "string",
+                        "enum": [
+                            "CIDADAO",
+                            "GESTOR"
+                        ]
+                    },
+                    "bairroId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "bairroNome": {
+                        "type": "string"
+                    },
+                    "criadoEm": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "LoginRequest": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "morador@ressoa.app",
+                        "minLength": 1
+                    },
+                    "senha": {
+                        "type": "string",
+                        "example": "Ressoa@2026",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "email",
+                    "senha"
+                ]
+            },
+            "NotificacaoResponse": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "titulo": {
+                        "type": "string"
+                    },
+                    "mensagem": {
+                        "type": "string"
+                    },
+                    "lida": {
+                        "type": "boolean"
+                    },
+                    "criadaEm": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "avaliacaoId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "nivel": {
+                        "type": "string",
+                        "enum": [
+                            "VERDE",
+                            "AMARELO",
+                            "LARANJA",
+                            "VERMELHO"
+                        ]
+                    },
+                    "bairroId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "bairroNome": {
+                        "type": "string"
+                    }
+                }
+            },
+            "PageResponseNotificacaoResponse": {
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/NotificacaoResponse"
+                        }
+                    },
+                    "page": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "size": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "totalElements": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "totalPages": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "last": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "PageResponseDispositivoResponse": {
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DispositivoResponse"
+                        }
+                    },
+                    "page": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "size": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "totalElements": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "totalPages": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "last": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "PageResponseBairroResponse": {
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/BairroResponse"
+                        }
+                    },
+                    "page": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "size": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "totalElements": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "totalPages": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "last": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "PageResponseAvaliacaoResponse": {
+                "type": "object",
+                "properties": {
+                    "content": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AvaliacaoResponse"
+                        }
+                    },
+                    "page": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "size": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "totalElements": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "totalPages": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "last": {
+                        "type": "boolean"
+                    }
+                }
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        }
+    }
+}
