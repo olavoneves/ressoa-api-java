@@ -9,7 +9,7 @@ O **Ressoa** combina um aparelho de ultrassom (ESP32 + transdutor piezoelétrico
 
 **Cidadão beneficiado:** morador de periferia com abastecimento de água intermitente (prioridade a bebês, gestantes e idosos). **Segundo público:** agentes de endemias e gestores da vigilância em saúde.
 
-## Integrantes
+## Integrantes — Grupo **Ressoa** · Turma **2TDSR**
 
 | Nome | RM |
 |---|---|
@@ -85,15 +85,48 @@ Criados automaticamente com o banco vazio (`SEED_HABILITADO=true`). Senha: o val
 
 | Método e rota | Acesso | Descrição |
 |---|---|---|
-| `POST /api/auth/registro` | público | Cadastro do morador (já devolve token) |
+| `POST /api/auth/registro` | público | Cadastro do morador (nome, e-mail, senha, bairro) — já devolve o token |
 | `POST /api/auth/login` | público | `{ token, tipo, expiraEm, papel, usuario }` |
-| `GET /api/auth/me` | autenticado | Perfil do usuário |
-| `GET /api/bairros`, `GET /api/bairros/{id}` | público | Lista paginada (filtros `nome`, `municipio`, `uf`, `nivel`) |
-| `POST/PUT/DELETE /api/bairros` | GESTOR | CRUD de bairros |
-| `GET/POST/PUT/DELETE /api/dispositivos` | CIDADAO (os seus) · GESTOR (todos) | CRUD paginado de aparelhos |
-| `/swagger-ui.html`, `/actuator/health` | público | Documentação e saúde |
+| `GET /api/auth/me` | autenticado | Perfil do usuário logado |
+| `GET /api/bairros`, `GET /api/bairros/{id}` | público | Lista paginada com filtros `nome`, `municipio`, `uf`, `nivel` e o nível de risco atual |
+| `POST /api/bairros`, `PUT /api/bairros/{id}`, `DELETE /api/bairros/{id}` | GESTOR | CRUD de bairros |
+| `GET /api/dispositivos`, `GET /api/dispositivos/{id}` | CIDADAO (os seus) · GESTOR (todos) | Aparelhos Ressoa, paginado |
+| `POST /api/dispositivos`, `PUT /api/dispositivos/{id}`, `DELETE /api/dispositivos/{id}` | CIDADAO (os seus) · GESTOR | Cadastro do aparelho instalado no recipiente |
+| `GET /api/avaliacoes`, `GET /api/avaliacoes/{id}` | autenticado | Histórico de risco por bairro e semana (filtros `bairroId`, `nivel`) |
+| `POST /api/avaliacoes` | GESTOR (e conta do serviço de IA) | Registra a avaliação; sem `nivel`, ele é calculado pelos indicadores. Se o nível mudar, publica `risco.atualizado` |
+| `POST /api/bairros/{id}/orientacao` | autenticado | **Spring AI:** CIDADAO recebe orientação simples ao morador; GESTOR recebe plano de ação |
+| `GET /api/notificacoes` | autenticado | Alertas do morador (gerados pelo consumidor RabbitMQ), paginado |
+| `GET /api/notificacoes/nao-lidas/contagem` | autenticado | Badge de não lidas no app |
+| `PATCH /api/notificacoes/{id}/lida` | autenticado (dono) | Marca como lida |
+| `/swagger-ui.html`, `/v3/api-docs`, `/actuator/health` | público | Documentação e saúde |
 
-*(Avaliações de risco, orientação por IA e notificações: em desenvolvimento.)*
+## Requisitos da disciplina
+
+| # | Requisito | Onde está |
+|---|---|---|
+| 1 | API REST com ≥ 3 entidades relacionadas, CRUD JPA e paginação | 5 entidades JPA relacionadas: `Bairro` 1-N `Usuario` 1-N `Dispositivo`; `Bairro` 1-N `AvaliacaoRisco` 1-N `Notificacao` N-1 `Usuario` (o esquema completo tem 7 tabelas, com `LEITURA` gravada pela API .NET e `AUDITORIA` pelo gatilho do banco). CRUD paginado em bairros e dispositivos; listas paginadas em avaliações e notificações |
+| 2 | Bean Validation + `@RestControllerAdvice` | DTOs `record` com `@NotBlank`, `@Email`, `@Pattern`, `@DecimalMin`… · `shared/exception/GlobalExceptionHandler` responde em Problem Details (400, 401, 403, 404, 409, 422) |
+| 3 | Spring Security + JWT com 2 papéis | `shared/security` (resource server HS256) · `CIDADAO` e `GESTOR` com `@PreAuthorize` e regra de dono nos aparelhos e notificações |
+| 4 | Spring AI integrado ao fluxo | `orientacao/OrientacaoService` usa `ChatClient` com prompts por papel (`PromptsOrientacao`) a partir do nível de risco real do bairro. Resposta do morador fica em cache em `AVALIACAO_RISCO.ORIENTACAO_IA`; se o LLM falhar, `OrientacaoContingencia` responde (`geradaPorIa=false`) |
+| 5 | Arquitetura distribuída — **Opção A** | `mensageria/` publica `risco.atualizado` após o commit; `notificacao/RiscoAtualizadoListener` consome, com retry, DLQ e idempotência (`UK_NOTIFICACAO_USUARIO_AVALIACAO`) |
+| 6 | Swagger + README + consumo pelo app | springdoc com `bearerAuth` · este README · rotas usadas pelo app Mobile |
+
+### Regra de classificação do risco (gatilhos do briefing)
+
+| Nível | Gatilho | Ação recomendada |
+|---|---|---|
+| VERMELHO | casos > 100 por 100 mil habitantes | Plano de emergência, com prioridade a bebês, gestantes e idosos |
+| LARANJA | Rt > 1 | Bloqueio da transmissão nos primeiros casos e salas de hidratação |
+| AMARELO | temperatura mínima média > 22 °C | Mais pulsos por dia, mutirão contra criadouros e alerta aos moradores |
+| VERDE | nenhum gatilho | Instalar o Ressoa nos bairros com água intermitente |
+
+## Roteiro de demonstração (Swagger)
+
+1. `POST /api/auth/login` com `gestor@ressoa.app` → **Authorize** com o token.
+2. `POST /api/avaliacoes` com `{ "bairroId": 1, "semanaEpidemiologica": 202647, "casos100k": 130.5 }` → nível calculado **VERMELHO**; o evento `risco.atualizado` vai para o RabbitMQ.
+3. `POST /api/bairros/1/orientacao` → plano de ação do gestor gerado pelo Gemini.
+4. Login com `morador@ressoa.app` → `GET /api/notificacoes` mostra o alerta criado pelo consumidor; `POST /api/bairros/1/orientacao` traz a orientação simples ao morador.
+5. `GET /api/dispositivos` → só os aparelhos da Maria; o status diário vem da API .NET (`ressoa-api-dotnet`).
 
 ## Deploy
 
