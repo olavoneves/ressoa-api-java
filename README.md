@@ -65,7 +65,7 @@ Quando uma avaliação de risco muda o nível de um bairro, a API publica o even
 | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | Conexão Oracle |
 | `JWT_SECRET` | Segredo HS256 (≥ 32 bytes), **o mesmo da API .NET** |
 | `JWT_EXPIRACAO_MINUTOS` | Validade do token (padrão 480) |
-| `GEMINI_API_KEY`, `GEMINI_MODEL` | Google Gemini (padrão `gemini-2.5-flash`) |
+| `GEMINI_API_KEY`, `GEMINI_MODEL` | Google Gemini (padrão `gemini-3.1-flash-lite`; alternativa `gemini-3.8-flash`) |
 | `AI_CHAT_PROVIDER` | `google-genai` (padrão) ou `none` (usa orientação de contingência) |
 | `RABBITMQ_URL` | URI AMQP (ex.: CloudAMQP `amqps://...`) |
 | `SEED_HABILITADO`, `SEED_SENHA_PADRAO` | Carga de dados de demonstração com banco vazio |

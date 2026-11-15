@@ -20,7 +20,7 @@ final class PromptsOrientacao {
             - No máximo 6 itens curtos em lista com hífen, em ordem de prioridade.
             - Adapte as ações ao nível de risco informado.
             - Inclua um cuidado específico para bebês, gestantes e idosos.
-            - Lembre de manter o aparelho Ressoa ligado e o recipiente tampado.
+            - Lembre de manter o aparelho Ressoa dentro do recipiente, com a bateria carregada (ele funciona a bateria, sem tomada), e o recipiente tampado.
             - Nunca faça diagnóstico nem indique remédio. Em sinais de alarme (dor abdominal forte, vômitos,
               sangramento, tontura) mande procurar a UBS ou pronto atendimento imediatamente.
             - Não invente números nem dados que não foram fornecidos.
