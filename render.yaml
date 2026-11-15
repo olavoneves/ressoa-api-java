@@ -1,0 +1,40 @@
+# Blueprint do Render (https://render.com/docs/blueprint-spec)
+# Hospedagem pública da API para o app Mobile e para a correção (até 30/11).
+# O deploy oficial da disciplina de DevOps é na Azure (azure-pipeline.yml) e não depende deste arquivo.
+# Valores com sync: false são preenchidos no painel do Render (nunca no Git).
+services:
+  - type: web
+    name: ressoa-api-java
+    runtime: docker
+    plan: free
+    region: virginia
+    dockerfilePath: ./dockerfiles/Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health/liveness
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: "8080"
+      # Ajuste para 512 MB / 0,1 CPU do plano gratuito
+      - key: JAVA_TOOL_OPTIONS
+        value: "-XX:MaxRAMPercentage=60 -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.1-flash-lite
+      - key: RABBITMQ_URL
+        sync: false
+      - key: SEED_HABILITADO
+        value: "true"
+      - key: SEED_SENHA_PADRAO
+        sync: false
+      - key: CORS_ORIGENS
+        value: "*"
