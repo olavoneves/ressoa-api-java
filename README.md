@@ -130,7 +130,16 @@ Criados automaticamente com o banco vazio (`SEED_HABILITADO=true`). Senha: o val
 
 ## Deploy
 
-Azure App Service via Azure DevOps (disciplina de DevOps). Link: *a definir*.
+| Ambiente | URL |
+|---|---|
+| **API pública (Render)** | https://ressoa-api-java.onrender.com |
+| Swagger | https://ressoa-api-java.onrender.com/swagger-ui.html |
+| Saúde | https://ressoa-api-java.onrender.com/actuator/health |
+| API de telemetria (.NET) | https://ressoa-api-dotnet.onrender.com/swagger |
+
+- Hospedagem em contêiner Docker (`dockerfiles/Dockerfile`) pelo blueprint `render.yaml`, com banco **Oracle FIAP** e **CloudAMQP** (RabbitMQ). Segredos só nas variáveis de ambiente do Render.
+- Plano gratuito: o workflow `manter-ativa.yml` faz um *ping* a cada 10 min para a API não hibernar. Se a primeira chamada demorar, aguarde até 4 min (inicialização a frio).
+- Deploy da disciplina de DevOps: Azure App Service via Azure DevOps (`azure-pipeline.yml`).
 
 ## Declaração de uso de IA
 
