@@ -5,6 +5,10 @@
 > **Matar a larva com som antes que a seca vire epidemia.**
 > Global Solution FIAP 2026/2 — CitizenTech · Disciplina **Java Advanced**
 
+🎬 **Vídeo pitch (≤ 5 min, com demo em produção):** https://youtu.be/7X82ni7_LVU
+
+🌐 **API em produção:** https://ressoa-api-java.onrender.com/swagger-ui.html
+
 O **Ressoa** combina um aparelho de ultrassom (ESP32 + transdutor piezoelétrico) que mata larvas do *Aedes aegypti* dentro de tambores e caixas d'água com uma **plataforma de risco** que diz onde instalar e quando agir. Esta API é o núcleo da plataforma: contas, bairros, aparelhos, avaliações de risco, orientação gerada por IA e alertas aos moradores.
 
 **Cidadão beneficiado:** morador de periferia com abastecimento de água intermitente (prioridade a bebês, gestantes e idosos). **Segundo público:** agentes de endemias e gestores da vigilância em saúde.
