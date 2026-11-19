@@ -139,7 +139,27 @@ Criados automaticamente com o banco vazio (`SEED_HABILITADO=true`). Senha: o val
 
 - Hospedagem em contêiner Docker (`dockerfiles/Dockerfile`) pelo blueprint `render.yaml`, com banco **Oracle FIAP** e **CloudAMQP** (RabbitMQ). Segredos só nas variáveis de ambiente do Render.
 - Plano gratuito: o workflow `manter-ativa.yml` faz um *ping* a cada 10 min para a API não hibernar. Se a primeira chamada demorar, aguarde até 4 min (inicialização a frio).
-- Deploy da disciplina de DevOps: Azure App Service via Azure DevOps (`azure-pipeline.yml`).
+- Deploy da disciplina de DevOps: Azure App Service via Azure DevOps (`azure-pipeline.yml`). Veja a seção abaixo.
+
+## DevOps Tools & Cloud Computing — Global Solution
+
+A API Java também roda na **Azure**, com CI/CD no **Azure DevOps**. O código de entrega fica no Azure Repos (projeto privado `Ressoa - Global Solution`), e os arquivos de DevOps estão espelhados aqui.
+
+| | |
+|---|---|
+| **Organização no Azure DevOps** | https://dev.azure.com/RM563558 |
+| **Vídeo de DevOps** | https://youtu.be/dDE-D5OLjfs |
+| **Documentação completa** | [README-DEVOPS.md](README-DEVOPS.md): ordem dos scripts, pipeline, variáveis e banco |
+
+![Arquitetura DevOps do Ressoa](docs/arquitetura/arquitetura-ressoa.png)
+
+| Item | Onde está |
+|---|---|
+| Provisionamento (Azure CLI) | `scripts/00_variables.sh` a `scripts/10_smoke-tests.sh`, mais `97_pausar.sh`, `98_retomar.sh` e `99_cleanup.sh` |
+| DDL do banco | `scripts/script-bd.sql` |
+| Imagem do Oracle XE (ACI + ACR) | `dockerfiles/Dockerfile.oracle` e `dockerfiles/oracle-init/` |
+| Pipeline Build + Release (YAML) | `azure-pipeline.yml`: `mvnw clean verify`, testes JUnit e artefato `ressoa-api-jar` no Build; deploy no Web App `rm561940-ressoa-api` e checagem do `/actuator/health` na Release |
+| Segredos | Key Vault `kv-ressoa-rm561940` → variable group secreto `ressoa-secrets`; nenhuma senha no repositório |
 
 ## Declaração de uso de IA
 

@@ -1,0 +1,22 @@
+# =====================================================================
+#  Ressoa - Imagem do Banco de Dados (Oracle XE 21c)
+#  FIAP - DevOps Tools & Cloud Computing - Global Solution 2026/2
+#
+#  O banco roda em container na nuvem (ACI, imagem no ACR). Esta imagem
+#  acrescenta a imagem oficial gvenzl/oracle-xe o DDL do projeto
+#  (scripts/script-bd.sql): no primeiro boot o entrypoint executa o que
+#  esta em /container-entrypoint-initdb.d e as tabelas ja nascem prontas.
+#  Como o ACI nao tem volume, isso vale tambem a cada 98_retomar.sh.
+#
+#  Build (contexto = raiz do repositorio), feito pelo 03_acr.sh:
+#    az acr build -r <acr> -t ressoa-oracle:v1 -f dockerfiles/Dockerfile.oracle .
+#
+#  NENHUMA senha aqui: ORACLE_PASSWORD e APP_USER_PASSWORD chegam pelas
+#  --secure-environment-variables do ACI (04_aci-db.sh), lidas do Key Vault.
+# =====================================================================
+FROM gvenzl/oracle-xe:21-slim
+
+COPY scripts/script-bd.sql /opt/ressoa/script-bd.sql
+COPY dockerfiles/oracle-init/01-ressoa-ddl.sql /container-entrypoint-initdb.d/01-ressoa-ddl.sql
+
+EXPOSE 1521

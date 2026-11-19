@@ -1,0 +1,157 @@
+# =====================================================================
+#  Ressoa - API Java (Spring Boot) - Pipeline multi-stage
+#  FIAP - DevOps Tools & Cloud Computing - Global Solution 2026/2
+#
+#  Stage Build   : dispara a cada commit na main. A main e protegida (so
+#                  recebe merge de PR), entao o Build roda apos o merge.
+#                  Maven compila, roda os testes JUnit, publica o resultado
+#                  dos testes e o artefato (JAR).
+#  Stage Release : roda sozinho quando o Build termina com sucesso, ou seja,
+#                  quando ha um novo artefato. Publica o JAR no Web App e
+#                  grava as variaveis de ambiente vindas do variable group.
+#
+#  Nenhum segredo neste arquivo: DB_PASSWORD, JWT_SECRET, SEED_SENHA_PADRAO,
+#  GEMINI_API_KEY e RABBITMQ_URL vem do variable group "ressoa-secrets"
+#  (scripts/07_variable-group.sh), marcados como secretos e mascarados (***)
+#  nos logs.
+# =====================================================================
+
+name: ressoa-$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - main
+
+# PR nao dispara: o Build e o gatilho do deploy em producao.
+pr: none
+
+variables:
+  webAppName: rm561940-ressoa-api
+  azureSubscription: sc-azure-ressoa
+  artifactName: ressoa-api-jar
+  # Repositorio Maven dentro do workspace, para o Cache@2 guardar entre runs.
+  MAVEN_CACHE_FOLDER: $(Pipeline.Workspace)/.m2/repository
+
+stages:
+  # ===================================================================
+  # 1. BUILD - compilacao, testes JUnit e artefato
+  # ===================================================================
+  - stage: Build
+    displayName: Build - Maven, testes JUnit e artefato
+    jobs:
+      - job: build
+        displayName: Compilar, testar e publicar o JAR
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: Cache@2
+            displayName: Restaurar o cache do Maven
+            inputs:
+              key: 'maven | "$(Agent.OS)" | pom.xml'
+              restoreKeys: |
+                maven | "$(Agent.OS)"
+              path: $(MAVEN_CACHE_FOLDER)
+
+          # "verify" passa por compile -> test -> package: se um teste
+          # falhar, nao ha JAR, nao ha artefato e o Release nao roda.
+          # Os testes rodam sem Oracle, LLM e RabbitMQ (perfil test, H2).
+          # Maven Wrapper: mesma versao do Maven que o time usa (3.10.0).
+          - bash: |
+              chmod +x mvnw
+              ./mvnw -B clean verify -Dmaven.repo.local="$(MAVEN_CACHE_FOLDER)"
+            displayName: Build e testes automaticos (./mvnw clean verify)
+            env:
+              JAVA_HOME: $(JAVA_HOME_21_X64)
+
+          # Publica mesmo com teste falhando: o relatorio mostra qual falhou.
+          - task: PublishTestResults@2
+            displayName: Publicar resultados dos testes JUnit
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFormat: JUnit
+              testResultsFiles: '**/surefire-reports/TEST-*.xml'
+              testRunTitle: Ressoa API - testes JUnit
+              failTaskOnFailedTests: true
+
+          # So o JAR executavel: o *.jar.original do spring-boot-maven-plugin
+          # nao casa com o padrao.
+          - task: CopyFiles@2
+            displayName: Separar o JAR executavel
+            inputs:
+              SourceFolder: $(System.DefaultWorkingDirectory)/target
+              Contents: '*.jar'
+              TargetFolder: $(Build.ArtifactStagingDirectory)
+
+          - task: PublishPipelineArtifact@1
+            displayName: Publicar o artefato $(artifactName)
+            inputs:
+              targetPath: $(Build.ArtifactStagingDirectory)
+              artifact: $(artifactName)
+              publishLocation: pipeline
+
+  # ===================================================================
+  # 2. RELEASE - deploy automatico no Azure Web App
+  # ===================================================================
+  - stage: Release
+    displayName: Release - deploy no Azure Web App
+    dependsOn: Build
+    # So publica o que saiu da main (um run manual de outra branch para no Build).
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    # Os segredos so existem neste stage: o Build nao precisa deles.
+    variables:
+      - group: ressoa-secrets
+    jobs:
+      - deployment: deploy_webapp
+        displayName: Deploy do JAR no Web App
+        pool:
+          vmImage: ubuntu-latest
+        # Guarda o historico de deploys. Autorizado pelo scripts/09_pipeline.sh
+        # (senao o stage fica preso em Checkpoint.Authorization).
+        environment: ressoa-producao
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: ${{ variables.artifactName }}
+                  displayName: Baixar o artefato do Build
+
+                - task: AzureWebApp@1
+                  displayName: Publicar o JAR e aplicar as variaveis de ambiente
+                  inputs:
+                    azureSubscription: $(azureSubscription)
+                    appType: webAppLinux
+                    appName: $(webAppName)
+                    package: $(Pipeline.Workspace)/$(artifactName)/*.jar
+                    runtimeStack: JAVA|21-java21
+                    # Nomes lidos pelo application.properties. As demais
+                    # variaveis (SEED_HABILITADO, CORS_ORIGENS, ...) ficam no
+                    # padrao do codigo.
+                    appSettings: >-
+                      -DB_URL "$(DB_URL)"
+                      -DB_USERNAME "$(DB_USERNAME)"
+                      -DB_PASSWORD "$(DB_PASSWORD)"
+                      -JWT_SECRET "$(JWT_SECRET)"
+                      -SEED_SENHA_PADRAO "$(SEED_SENHA_PADRAO)"
+                      -GEMINI_API_KEY "$(GEMINI_API_KEY)"
+                      -RABBITMQ_URL "$(RABBITMQ_URL)"
+
+                # O health do Spring inclui o Oracle e o RabbitMQ: 200 com "UP"
+                # prova a cadeia inteira, Web App -> Oracle no ACI. O Spring
+                # Boot levou ~4,5 min no B1 da Sprint 4: espera de ate 10 min.
+                - bash: |
+                    URL="https://$(webAppName).azurewebsites.net/actuator/health"
+                    echo "Verificando ${URL}"
+                    for tentativa in $(seq 1 40); do
+                      CODIGO=$(curl -s -o health.json -w '%{http_code}' --max-time 20 "${URL}" || true)
+                      if [ "${CODIGO}" = "200" ] && grep -q '"UP"' health.json; then
+                        echo "Aplicacao no ar apos ~$((tentativa * 15)) s: $(cat health.json)"
+                        exit 0
+                      fi
+                      echo "tentativa ${tentativa}: HTTP ${CODIGO}"
+                      sleep 15
+                    done
+                    echo "##vso[task.logissue type=error]A aplicacao nao respondeu UP em 10 minutos."
+                    exit 1
+                  displayName: Verificar a saude da aplicacao (smoke test)
